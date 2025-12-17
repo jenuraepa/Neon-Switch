@@ -2,6 +2,8 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreDisplay = document.getElementById('scoreDisplay');
 
+// FEATURE: Load High Score from Local Storage
+let highScore = localStorage.getItem('neonHighScore') || 0;
 let score = 0;
 let gameRunning = true;
 let frameCount = 0;
@@ -20,6 +22,9 @@ const player = {
 
 let blocks = [];
 const keys = {};
+
+// Initialize display with High Score
+scoreDisplay.innerText = "Score: 0 | Best: " + highScore;
 
 document.addEventListener('keydown', (e) => {
     keys[e.code] = true;
@@ -60,7 +65,7 @@ function resetGame() {
     blocks = [];
     gameRunning = true;
     player.color = COLOR_A;
-    scoreDisplay.innerText = "Score: 0";
+    scoreDisplay.innerText = "Score: 0 | Best: " + highScore;
     gameLoop();
 }
 
@@ -91,17 +96,26 @@ function update() {
         ) {
             if (b.color === player.color) {
                 score++;
-                scoreDisplay.innerText = "Score: " + score;
+                scoreDisplay.innerText = "Score: " + score + " | Best: " + highScore;
                 blocks.splice(i, 1);
                 i--;
             } else {
-                gameRunning = false;
+                handleGameOver();
             }
         }
         else if (b.y > canvas.height) {
              blocks.splice(i, 1);
              i--;
         }
+    }
+}
+
+function handleGameOver() {
+    gameRunning = false;
+    // Check and Save New High Score
+    if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('neonHighScore', highScore);
     }
 }
 
@@ -130,6 +144,15 @@ function draw() {
         ctx.font = "30px Courier New";
         ctx.textAlign = "center";
         ctx.fillText("GAME OVER", canvas.width/2, canvas.height/2);
+        
+        // Show "New Record" if applicable
+        if (score === highScore && score > 0) {
+            ctx.fillStyle = "yellow";
+            ctx.font = "15px Courier New";
+            ctx.fillText("NEW HIGH SCORE!", canvas.width/2, canvas.height/2 - 30);
+            ctx.fillStyle = "white";
+        }
+
         ctx.font = "20px Courier New";
         ctx.fillText("Press ENTER to Restart", canvas.width/2, canvas.height/2 + 40);
     }
